@@ -1,35 +1,37 @@
-import os
-import pandas as pd
+import logic
 
-filename = "file.xlsx"
+def run_menu():
+    df = logic.load_data()
 
-def add_entry():
-    print("--- New Entry ---")
-    date = input("Enter Date (YYYY-MM-DD):  ")
-    category = input("Category (e.g., Stock, Food, Rent): ")
-    trans_type = input("Type (Bill or Payment): ").capitalize()
-    party = input("Type Party Name: ").lower()
+    while True:
+        print("\n--- Business Ledger ---")
+        choice = input("1. Add Entry\n2. Check Balance\n3. Save & Exit\nChoice: ")
 
-    try:
-        amount = float(input("Amount: "))
-    except ValueError:
-        print("Error: Amount must be a number!")
-        return
-    
-    new_data = {
-        'Party': [party],
-        'Date': [date],
-        'Category': [category],
-        'Type': [trans_type],
-        'Amount': [amount]
-    }
-    new_df = pd.DataFrame(new_data)
+        if choice == '1':
+            p = input("Party Name: ")
+            c = input("Category: ")
+            t = input("Type (Bill/Payment): ")
+            try:
+                a = float(input("Amount: "))
+                df = logic.process_entry(df, p, c, t, a)
+                print("Entry processed in memory.")
+            except ValueError:
+                print("Invalid amount!")
 
-    if os.path.exists(filename):
-        existing_df = pd.read_excel(filename)
-        updated_df = pd.concat([existing_df, new_df], ignore_index=True)
-        updated_df.to_excel(filename, index=False)
-    else:
-        new_df.to_excel(filename, index=False)
+        elif choice == '2':
+            p = input("Enter Party Name: ")
+            stats = logic.get_party_stats(df, p)
+            if stats:
+                print(f"\n--- {p.capitalize()} ---")
+                print(f"Bills: {stats['bills']} | Paid: {stats['payments']}")
+                print(f"Pending: {stats['net']}")
+            else:
+                print("No records found.")
 
-    print(f"Successfully added {trans_type} for ${amount}!")
+        elif choice == '3':
+            logic.save_data(df)
+            print("Data saved to Excel. Goodbye!")
+            break
+
+if __name__ == "__main__":
+    run_menu()
